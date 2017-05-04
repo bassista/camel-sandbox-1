@@ -23,14 +23,22 @@
          http://camel.apache.org/schema/spring
          http://camel.apache.org/schema/spring/camel-spring.xsd">
 
-  <bean id="properties" class="org.apache.camel.component.properties.PropertiesComponent">
+  <bean class="org.apache.camel.spring.spi.BridgePropertyPlaceholderConfigurer">
     <property name="location" value="classpath:camel.properties"/>
+  </bean>
+
+  <bean id="myProcessor" class="com.github.lburgazzoli.MyProcessor">
+    <constructor-arg value="${message}"/>
   </bean>
 
   <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
     <route>
-      <from uri="timer:{{timer.name}}"/>
-      <log message="Got ${exchange}"/>
+      <from id="my-timer" uri="timer:{{timer.name}}"/>
+      <process ref="myProcessor"/>
+      <transform>
+        <simple>${body} xyz ${properties:message.suffix}</simple>
+      </transform>
+      <to id="my-log" uri="log:test?level={{log.level}}&amp;showAll={{log.all}}&amp;multiline={{log.multiline}}"/>
     </route>
   </camelContext>
 
